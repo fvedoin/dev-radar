@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const routes = require('./routes');
 
@@ -10,6 +11,9 @@ mongoose.connect('mongodb+srv://fernando:cursoreact@cluster0-xo9rd.mongodb.net/w
     useUnifiedTopology: true
 });
 
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
 //express understands body request as JSON
 app.use(express.json());
 app.use(routes);
