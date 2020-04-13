@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 
+const mongoUrl = process.env.DATABASE_URL;
+
 const routes = require('./routes');
 const { setupWebsocket } = require('./websocket');
 
@@ -11,7 +13,7 @@ const server = http.Server(app);
 
 setupWebsocket(server);
 
-mongoose.connect('mongodb+srv://fernando:cursoreact@cluster0-xo9rd.mongodb.net/week10?retryWrites=true&w=majority', {
+mongoose.connect(mongoUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
