@@ -1,38 +1,35 @@
 const axios = require('axios');
-
 const Dev = require('../models/Dev');
 const parseStringAsArray = require('../utils/parseStringAsArray');
-
-//index, show, store, update, destroy
+const { findConnections, sendMessage } = require('../websocket');
 
 module.exports = {
 
-    async index (req, res) {
+    async index(request, response) {
 
         const devs = await Dev.find();
 
-        return res.json(devs)
+        return response.json(devs);
 
     },
 
-    async store (req, res) {
+    async store(request, response) {
+        const { github_username, techs, latitude, longitude } = request.body;
 
-        const { github_username, techs, latitude, longitude } = req.body;
-    
         let dev = await Dev.findOne({ github_username });
 
-        if(!dev){
+        if (!dev) {
             const apiResponse = await axios.get(`https://api.github.com/users/${github_username}`);
-    
-            const { name = login, avatar_url, bio} = apiResponse.data;
-        
+
+            const { name = login, avatar_url, bio } = apiResponse.data;
+
             const techsArray = parseStringAsArray(techs);
-        
+
             const location = {
                 type: 'Point',
-                coordinates: [longitude, latitude]
+                coordinates: [longitude, latitude],
             };
-        
+
             dev = await Dev.create({
                 github_username,
                 name,
@@ -40,19 +37,20 @@ module.exports = {
                 bio,
                 techs: techsArray,
                 location
-            });
-        }      
-    
-        return res.json({ dev });
-    
-    },
+            })
 
-    async update() {
+            //filter connections that are within 10 km
+            //and new dev has at least on of the techs researched 
 
-    },
+            const sendSocketMessageTo = findConnections(
+                { latitude, longitude },
+                techsArray
+            )
 
-    async destroy() {
+            sendMessage(sendSocketMessageTo, 'new-dev', dev);
+        }
+
+        return response.json(dev);
         
     }
-    
 };
